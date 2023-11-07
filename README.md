@@ -1,17 +1,19 @@
-# Local Wordpress runtime using HTTPS in Docker
+# Local Wordpress development with HTTPS in Docker
 
 This step-by-step process will highlight the steps you need to perform in order to take your live-website to a docker
-container for local testing, including setting up the necessary certificates to test over HTTPS.
+container for local testing, including setting up the necessary certificates to test with HTTPS.
 
 ## Pre-requisites
 
-This guide assumes you have [Docker](https://docs.docker.com/engine/install/) and
-the [Docker Compose](https://docs.docker.com/compose/install/) plugin installed, as well as
-a [Docker daemon](https://docs.docker.com/config/daemon/start/) already running on your system.
+1. [Docker](https://docs.docker.com/engine/install/)
+2. [Docker Compose](https://docs.docker.com/compose/install/)
+3. [Docker daemon](https://docs.docker.com/config/daemon/start/) should be running.
+4. [mkcert](https://github.com/FiloSottile/mkcert) and a local certificate authority should've already been installed
+   using `mkcert -install`.
 
-## Download website content
+## Downloading website content
 
-The first step is to have a local copy of your Wordpress site's content. Most hosting providers provide your with FTP
+The first step is to have a local copy of your Wordpress site's content. Most hosting providers provide you with FTP
 access to your website's content. Check your control panel at your hosting provider to get access credentials.
 In this example, we're using Filezilla to access and download the content.
 
@@ -28,12 +30,12 @@ Depending on your site's size, this may take a while.
 Your hosting provider may offer alternative ways to get access, but the main point is to download the above-outlined
 folder and file.
 
-## Download database contents
+## Downloading database contents
 
 The next step is to obtain a copy of your database contents. Here, again, your hosting provider usually offers access to
 your site's database through the control panel, either by providing login-details to the database, or a button to
 directly connect to it through `phpMyAdmin`.
-Here, we're using the `phpMyAdmin` interface. You may get access to different databases. Look for the database that
+Here, the `phpMyAdmin` interface is used. You may get access to different databases. Look for the database that
 represents the `Wordpress` installation. These are usually denoted with tables having a specific prefix such as `wp_`
 or `www_`.
 
@@ -49,7 +51,7 @@ Your download will be a large `.sql` file.
 If you were provided with remote access details to your database, use your favorite database management tool,
 e.g. `Datagrip` or `DBeaver` to extract the Wordpress data.
 
-## Set up the local folder structure
+## Setting up local folder structure
 
 On your system, on a location where you want the local copy of your Wordpress website to reside, create a new folder,
 e.g. `MyWebsite`, and set up the file structure as shown in the diagram below. Copy the `wp-config.php` file and
@@ -112,12 +114,17 @@ volumes:
   db_data:
 ```
 
-In your terminal, navigate to the `MyWebsite` folder and run the following command: `docker-compose up -d`.
-This will download the services and its dependencies. This step may take some time the first time you run it.
+In your terminal, navigate to the `MyWebsite` folder and run the following command:
 
-This will set up a `MySQL` database and a `phpMyAdmin` instance, which is now available in your browser by navigating to
-the following address: `localhost:8080`. The compose process will also already have created a `wordpress` database in
-your `MySQL` instance.
+```Shell
+docker compose up -d
+```
+
+This will download the services and its dependencies. It may take some time the first time you run it. This will set up
+a `MySQL` database and a `phpMyAdmin` instance, which should available in your browser after it has done downloading and
+starting the containers.
+Navigate to the following address in your web browser: `localhost:8080`. The compose process will also already have
+created a `wordpress` database in your `MySQL` instance.
 
 Try to connect using the credentials you've set up in the compose file.
 
@@ -131,7 +138,7 @@ management program, port `3306` is already exposed the host system.
 
 ![](./img/DataGripConnectionTest.png)
 
-## Upload Wordpress database content
+## Uploading Wordpress database content
 
 The following steps will be for when you're using `phpMyAdmin`. If you use a different database management tool, these
 steps should be a general guideline of what you should do.
@@ -145,9 +152,9 @@ steps should be a general guideline of what you should do.
 
 ![](./img/phpMyAdminImportDatabase.png)
 
-## Set up local site address and certificates
+## Setting up local site address and certificates
 
-With the Wordpress site data being imported in the database, some changes to the data have to be made to reflect that
+With the Wordpress site data imported in the database, some changes to the data have to be made to reflect that
 it's no longer running on the server of your hosting provider. Otherwise, some plugins or processes may redirect you
 back to the live site.
 
@@ -167,17 +174,20 @@ UPDATE www_posts SET post_content = replace(post_content, 'mywebsite.com', 'mywe
 UPDATE www_postmeta SET meta_value = replace(meta_value,'mywebsite.com','mywebsite.dev');
 ```
 
+This will update the data in the tables to refer to your local website, rather than the live version.
+
 **Note:** pay attention to the site addresses and the `www_` prefix for the tables. The prefix is one that may differ
 per Wordpress install. Another common prefix is `wp_`. Update this query to reflect the prefix being used in your
 Wordpress installation.
 
-This will update the data in the tables to refer to your local website, rather than the live version.
+With the database all set up, the appropriate certificates for HTTPS can be created. Navigate to the `certs` folder in
+your project's root directory, and enter the following command:
 
-With the database all set up, the appropriate certificates for HTTPS can be created. This is done using a tool called
-[mkcert](https://github.com/FiloSottile/mkcert). When it has been downloaded and installed, enter the following command
-in your terminal: `mkcert -install`. This will create a local certificate authority on your system.
-After that, enter the following: `mkcert mywebsite.dev`. This will create a certificate and key file for your local
-site.
+```Shell
+mkcert mywebsite.dev
+```
+
+This will create a certificate and key file for your local site.
 
 Next, the `hosts` file on your system needs to be edited to direct the site address to the local ip address.
 This process differs per platform:
@@ -197,7 +207,8 @@ This process differs per platform:
 3. Press `Ctrl + O` to save.
 4. Press `Ctrl + X` to exit.
 
-Finally, open the `default-ssl.conf` file in your project's root directory, and set its contents to the following:
+Finally, open the `default-ssl.conf` file in your project's root directory, and set its contents to the following,
+and edit it to match your chosen local site address:
 
 ```
 <VirtualHost *:443>
@@ -217,13 +228,10 @@ Finally, open the `default-ssl.conf` file in your project's root directory, and 
 </VirtualHost>
 ```
 
-This is the configuration for the underlying Apache webserver that will be used in your Wordpress container. This will
+This is the configuration for the underlying Apache webserver that will be used in your Wordpress container, and will
 direct it to where it should look for the certificate and key files to properly handle a secure connection.
 
-## Set up the Wordpress container
-
-Now, let's set up the actual Wordpress container. Before doing that, let's shut down the currently running containers
-using `docker-compose down` in your terminal.
+## Setting up Wordpress container
 
 Open the `wp-config.php` file, the one you downloaded in the very first step. Double check that the following parameters
 match in value to those set up for the `db` service in your `docker-compose.yml` file:
@@ -237,20 +245,13 @@ In the `wp-config.php` file, you should find a variable named `$table_prefix` in
 Make sure this is set to a value that you expect as was used in updating the site address for local use, e.g. `www_`
 or `wp_`.
 
-If not already present in the `wp-config.php` file, you can add the following line as well, which will allow Wordpress
-to directly interact with the filesystem, as opposed to trying to interact using FTP:
-
-```PHP
-define('FS_METHOD', 'direct');
-```
-
-Now, open the `docker-compose.yml` file again, and add the Wordpress service following to `services`:
+Now, with the `docker-compose.yml` file open, add Wordpress to `services`:
 
 ```Docker
   wordpress:
     depends_on:
       - db
-    image: wordpress:latest
+    image: wordpress:latest     # Either use the latest version, or the version of your live site.
     container_name: "wordpress"
     ports:
       - "443:443"
@@ -265,13 +266,114 @@ Now, open the `docker-compose.yml` file again, and add the Wordpress service fol
       - ./default-ssl.conf:/etc/apache2/sites-available/default-ssl.conf
 ```
 
+With Wordpress added to the compose file, rebuild and start the Wordpress container:
 
-With
+```Shell
+docker compose up --build -d
+```
 
-* Update Docker compose file with Wordpress service
+If your terminal is not back already in your project's root directory, navigate to it now.
+Copy out the `docker-entrypoint.sh` file from the `wordpress` container, so that it can be modified:
+
+```Shell
+docker cp wordpress:/usr/local/bin/docker-entrypoint.sh docker-entrypoint.sh
+```
+
+Open this file in your text editor, and replace the final line of the file with the following contents:
+
+```Shell
+a2enmod ssl
+a2ensite default-ssl
+service apache2 restart
+service apache2 stop
+exec "$@"
+```
+
+This will enable the `ssl` module in the Apache webserver and will direct it to use the configuration that
+was set up earlier.
+
+Save and close the file. Open the docker compose file again and add the following volume mapping for the `wordpress`
+service:
+
+```Docker
+- ./docker-entrypoint.sh:/usr/local/bin/docker-entrypoint.sh:ro
+```
+
+That should be all! Now, rebuild again and your website should be up and running!
+
+```Shell
+docker compose up --build -d
+```
+
+In your web browser, navigate to your local webpage and notice that it's using HTTPS. Success!
+
+![](./img/MyWebsiteHttpConfirmed.png)
 
 ## Troubleshooting
 
-* Database connection error:
-    * Disable all plugins in the database:
-      table `www_options`: `option_name` -> `option_value`: `active_plugins` -> `a:0:{}`
+Some issues might pop up because your site is now running on a different address than it was before.
+
+### Slow loading
+
+Your hosting provider may have set up some PHP parameters that are optimised for loading web pages. You can adjust
+several parameters yourself by adding additional configuration files and mapping them to the Wordpress container's
+PHP config directory. Some personal settings I have applied are included below:
+
+* Create a `wordpress.ini` file and set its contents to:
+
+```Ini
+max_input_vars = 5000
+max_execution_time = 300
+post_max_size = 50M
+upload_max_filesize = 50M
+```
+
+* Create a `uploads.ini` file and set its contents to:
+
+```Ini
+file_uploads = On
+memory_limit = 64M
+upload_max_filesize = 64M
+post_max_size = 64M
+max_execution_time = 600
+```
+
+Map the files in the `wordpress` service's volumes:
+
+```Docker
+- ./Wordpress/uploads.ini:/usr/local/etc/php/conf.d/uploads.ini
+- ./Wordpress/wordpress.ini:/usr/local/etc/php/conf.d/wordpress.ini
+```
+
+Rebuild, and restart your containers.
+
+### Signing in
+
+Note that signing through `wp-admin` still needs to be done using the old site's e-mail addresses, if you've set it
+up like that, e.g. `user@mywebsite.com`. In [this section](#set-up-local-site-address-and-certificates), only content
+links and the site's url were changed. User credentials should've remained the same.
+
+### Database connection error
+
+In some cases, plugins and themes may store data that references to the live site's address still, which can show up as
+database connection errors. This can get fixed by disabling all plugins through updating a database value. You can enter
+the following SQL query (note the table prefix again):
+
+```SQL
+UPDATE www_options
+SET option_value = "a:0:{}"
+WHERE option_name = "active_plugins";
+```
+
+Going into the plugins section of your administrator page, you can start activating them again one by one, to see if
+any particular plugin is causing trouble. You may have to delve into its stored data to see if you need to update
+some additional values or settings.
+
+### Wordpress asks for FTP credentials
+
+By default, Wordpress will try to work using FTP to manage files on the host system. This is cumbersome and not
+efficient. To let Wordpress use the file system directly, add the following to your `wp-config.php` file:
+
+```PHP
+define('FS_METHOD', 'direct');
+```
