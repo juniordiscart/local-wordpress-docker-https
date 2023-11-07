@@ -1,6 +1,6 @@
 # Local Wordpress development with HTTPS in Docker
 
-This step-by-step process will highlight the steps you need to perform in order to take your live-website to a docker
+This step-by-step process will guide you through taking your live-website into a local Docker
 container for local testing, including setting up the necessary certificates to test with HTTPS.
 
 ## Pre-requisites
@@ -76,7 +76,7 @@ MyWebsite
 
 Open the `docker-compose.yml` file. This file will set up a `phpMyAdmin` container for database management.
 If you prefer to use a different tool, such as `DataGrip` or `DBeaver`, you can leave out the `phpMyAdmin` service from
-the docker compose file, and use your preferred tool later on.
+the Docker compose file, and use your preferred tool later on.
 
 ```Docker
 version: '3.9'
@@ -143,7 +143,7 @@ management program, port `3306` is already exposed the host system.
 The following steps will be for when you're using `phpMyAdmin`. If you use a different database management tool, these
 steps should be a general guideline of what you should do.
 
-1. Sign in to your database with your root credentials as set up in the docker compose file.
+1. Sign in to your database with your root credentials as set up in the Docker compose file.
 2. Select the `wordpress` database, in the column on the left side, so that this database is active and selected.
 3. Go to the Import tab.
 4. Browse to the `.sql` file you got earlier from your database export.
@@ -292,7 +292,7 @@ exec "$@"
 This will enable the `ssl` module in the Apache webserver and will direct it to use the configuration that
 was set up earlier.
 
-Save and close the file. Open the docker compose file again and add the following volume mapping for the `wordpress`
+Save and close the file. Open the Docker compose file again and add the following volume mapping for the `wordpress`
 service:
 
 ```Docker
