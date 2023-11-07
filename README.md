@@ -44,7 +44,7 @@ or `www_`.
 3. Optionally, tweak some settings if you want to customise the export.
 4. Press the `Export` button.
 
-![](./img/ExportphpMyAdmin.png)
+![](./img/ExportPMA.png)
 
 Your download will be a large `.sql` file.
 
@@ -299,7 +299,8 @@ service:
 - ./docker-entrypoint.sh:/usr/local/bin/docker-entrypoint.sh:ro
 ```
 
-That should be all! Now, rebuild again and your website should be up and running!
+That should be all! Now, rebuild again and your website should be up and running! A full copy of
+the `docker-compose.yml` file can be found [here](./docker-compose.yml).
 
 ```Shell
 docker compose up --build -d
