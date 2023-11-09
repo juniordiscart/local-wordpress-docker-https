@@ -351,10 +351,9 @@ Rebuild, and restart your containers.
 ### Signing in
 
 Note that signing in through `wp-admin` still needs to be done using the original e-mail addresses. If your site's
-administrators signed up with addresses such as `user@mywebsite.com`.
-In [this section](#setting-up-local-site-address-and-certificates),
-only content links, meta-data and the site's url were changed. User credentials and login information should've remained
-the same.
+administrators signed up with addresses such as `user@mywebsite.com`, those addresses should've remained the same.
+In [this section](#setting-up-local-site-address-and-certificates), only content links, meta-data and the site's url
+were changed. User credentials and login information should be untouched.
 
 ### Database connection error
 
